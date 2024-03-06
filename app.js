@@ -15,7 +15,7 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 app.post("/analyze", async (req, res) => {
-  const text = req?.body?.text;
+  const text = req.body.text;
   console.log("todays date ", new Date().toLocaleDateString("en-GB"));
   const prompt = `
 Parse the following text to determine if it's related to creating a Google (Gmail) event. Extract the event type, date, time, and any mentioned email addresses. Convert the date and time to the IST timezone and format the date as dd/mm/yyyy. Use the provided date as today's reference for any relative date calculations. Return the data in JSON format with keys for event, date, time, and email.
