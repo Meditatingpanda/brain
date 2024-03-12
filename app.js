@@ -115,6 +115,7 @@ app.post("/schedule-meet", async (req, res) => {
     ...formatEventData(eventData),
     attendees: [
       { email: eventData.email },
+      {email:"grp.gyanaranjan@gmail.com"}
       // Add more attendees here
     ],
     conferenceData: {
