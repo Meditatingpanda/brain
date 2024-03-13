@@ -2,7 +2,12 @@ import { Schema, model } from "mongoose";
 
 const UserSchema = new Schema(
   {
-    auth: Schema.Types.Map,
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    auth: Object,
     expiry_date: Date,
   },
   {

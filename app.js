@@ -1,5 +1,4 @@
 import express from "express";
-import axios from "axios";
 import morgan from "morgan";
 import cors from "cors";
 import "dotenv/config";
@@ -10,15 +9,19 @@ import { fileURLToPath } from "url";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import moment from "moment-timezone";
-const oauth2Client = new google.auth.OAuth2(
+import colors from "colors";
+import { connectDb } from "./utils/connectDb.js";
+;
+import authController from "./controllers/auth.controller.js";
+import meetController from "./controllers/meet.controller.js";
+export const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI
 );
-const scopes = ["https://www.googleapis.com/auth/calendar"];
+
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+export const __dirname = dirname(__filename);
 
 const chatModel = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_KEYS,
@@ -35,7 +38,7 @@ const chain = RunnableSequence.from([promptTemplate, chatModel, outputParser]);
 const app = express();
 const port = 3000;
 google.options({ auth: oauth2Client }); // Apply auth globally
-const calendar = google.calendar("v3");
+
 const tokens = {
   access_token:
     "ya29.a0Ad52N3-cLI693FYmCk805l_w_XjM8lJCmTA-X8QnbuOYxFnfzrJt9fWQS-e9fZ11z2vKV79owVmx1CInbBGTcodx1EzcgshCPNG3Ssk9zJDBu_mTvd79x5_L8ffYoJi3vYpzSPeaM7Gm1A9JbRM6_-StVJO3tYWORU0KaCgYKAVoSARISFQHGX2MiOwzYJqmW87XSrh3HFnoctg0171",
@@ -60,87 +63,13 @@ app.post("/analyze", async (req, res) => {
   res.send(JSON.parse(ans));
 });
 
-app.get("/auth", (req, res) => {
-  const url = oauth2Client.generateAuthUrl({
-    access_type: "offline",
-    scope: scopes,
-  });
-  res.redirect(url);
-});
+app.get("/auth",authController.authScopeController);
 
-app.get("/oauth2callback", async (req, res) => {
-  const { code } = req.query;
-  const { tokens } = await oauth2Client.getToken(code);
-  console.log("Token ", tokens);
-  oauth2Client.setCredentials(tokens);
-  res.sendFile(path.join(__dirname, "./view/auth.html"));
-});
+app.get("/oauth2callback", authController.callBackController);
 
-app.post("/schedule-meet", async (req, res) => {
-  if (!oauth2Client.credentials) {
-    return res.status(401).send("Authentication required");
-  }
-  const { title, desc, eventData } = req.body;
-  function formatEventData(data) {
-    // Extract and convert the date from DD/MM/YYYY to YYYY-MM-DD format
-    const [day, month, year] = data.date.split("/");
-    const formattedDate = `${year}-${month}-${day}`;
-
-    // Remove the ' PST' part from the start and end times if needed
-    const startTime = data.start_time.replace(" PST", "");
-    const endTime = data.end_time.replace(" PST", "");
-
-    // Combine the date and time in the desired dateTime format
-    const startDateTime = `${formattedDate}T${startTime}:00`;
-    const endDateTime = `${formattedDate}T${endTime}:00`;
-
-    // Structure the output
-    const formattedOutput = {
-      start: {
-        dateTime: startDateTime,
-        timeZone: "America/Los_Angeles", // PST is equivalent to Los Angeles time without considering daylight saving
-      },
-      end: {
-        dateTime: endDateTime,
-        timeZone: "America/Los_Angeles",
-      },
-    };
-
-    return formattedOutput;
-  }
-
-  const event = {
-    summary: title,
-    description: desc,
-    ...formatEventData(eventData),
-    attendees: [
-      { email: eventData.email },
-      {email:"grp.gyanaranjan@gmail.com"}
-      // Add more attendees here
-    ],
-    conferenceData: {
-      createRequest: { requestId: "sample-request-id" },
-    },
-  };
-
-  try {
-    const response = await calendar.events.insert({
-      calendarId: "primary",
-      resource: event,
-      conferenceDataVersion: 1,
-      sendNotifications: true,
-    });
-
-    res.json({
-      status: true,
-      link: response.data.htmlLink,
-    });
-  } catch (error) {
-    console.error("Error creating event", error);
-    res.status(500).send(error);
-  }
-});
+app.post("/schedule-meet", meetController.scheduleMeet);
 
 app.listen(port, () => {
+  connectDb();
   console.log(`Server running at http://localhost:${port}`);
 });
