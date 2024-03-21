@@ -9,6 +9,7 @@ const UserSchema = new Schema(
     },
     auth: Object,
     expiry_date: Date,
+    token:String
   },
   {
     timestamps: true,

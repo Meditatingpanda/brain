@@ -1,0 +1,18 @@
+
+> brain@1.0.0 dev
+> nodemon app
+
+[33m[nodemon] 3.0.3[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node app.js`[39m
+Server running at http://localhost:3000
+[42mMongoDB Connected at ac-nihoyna-shard-00-00.jzinixz.mongodb.net[49m
+todays date  21/03/2024
+[0mPOST /analyze [32m200[0m 1907.792 ms - 118[0m
+todays date  21/03/2024
+[0mPOST /analyze [32m200[0m 1539.216 ms - 103[0m
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting child process[39m
+[32m[nodemon] starting `node app.js`[39m
